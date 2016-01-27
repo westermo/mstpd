@@ -222,7 +222,7 @@ int rtnl_dump_filter(struct rtnl_handle *rth,
 					ERROR("ERROR truncated\n");
 				} else {
 					errno = -err->error;
-					ERROR("RTNETLINK answers");
+					INFO("RTNETLINK answers");
 				}
 				return -1;
 			}
@@ -347,7 +347,7 @@ int rtnl_talk(struct rtnl_handle *rtnl, struct nlmsghdr *n, pid_t peer,
 							       h->nlmsg_len);
 						return 0;
 					}
-					ERROR("RTNETLINK answers");
+					INFO("RTNETLINK answers");
 				}
 				return -1;
 			}

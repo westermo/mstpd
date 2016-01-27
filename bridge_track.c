@@ -493,7 +493,7 @@ void MSTP_OUT_set_state(per_tree_port_t *ptp, int new_state)
     if(0 == ptp->MSTID)
     { /* CIST */
         if(0 > br_set_state(&rth_state, prt->sysdeps.if_index, ptp->state))
-            ERROR_PRTNAME(br, prt, "Couldn't set kernel bridge state %s",
+            INFO_PRTNAME(br, prt, "Couldn't set kernel bridge state %s",
                           state_name);
     }
 }
@@ -750,8 +750,8 @@ int CTL_port_mcheck(int br_index, int port_index)
 
 int CTL_set_debug_level(int level)
 {
-    INFO("level %d", level);
     log_level = level;
+    INFO("level %d", level);
     return 0;
 }
 
