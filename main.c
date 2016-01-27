@@ -52,6 +52,7 @@ int main(int argc, char *argv[])
 {
     int c;
     int daemonize = 1;
+    FILE *f;
 
     /* Sanity check */
     {
@@ -104,21 +105,22 @@ int main(int argc, char *argv[])
 
     if(daemonize)
     {
-        FILE *f = fopen("/var/run/"APP_NAME".pid", "w");
-        if(!f)
-        {
-            ERROR("can't open /var/run/"APP_NAME".pid");
-            return -1;
-        }
         if(daemon(0, 0))
         {
             ERROR("can't daemonize");
             return -1;
         }
-        fprintf(f, "%d", getpid());
-        fclose(f);
         print_to_syslog = 1;
     }
+
+    f = fopen("/var/run/"APP_NAME".pid", "w");
+    if(!f)
+    {
+      ERROR("can't open /var/run/"APP_NAME".pid");
+      return -1;
+    }
+    fprintf(f, "%d", getpid());
+    fclose(f);
 
     if(print_to_syslog)
         openlog(APP_NAME, 0, LOG_DAEMON);
