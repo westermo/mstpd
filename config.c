@@ -100,8 +100,10 @@ cfg_t *parse_conf(char *conf)
     {
     case CFG_FILE_ERROR:
 	fprintf(stderr, "Cannot read configuration file %s: %s\n", conf, strerror(errno));
-
+	return NULL;
+	
     case CFG_PARSE_ERROR:
+	fprintf(stderr, "Error when parsing configuration file %s: %s\n", conf, strerror(errno));
 	return NULL;
          
     case CFG_SUCCESS:
@@ -109,6 +111,21 @@ cfg_t *parse_conf(char *conf)
     }
 
     return cfg;
+}
+
+int get_rstp_pid(void)
+{
+    char filename[] = "/var/run/mstpd.pid";
+    FILE *fp;
+    int pid=0;
+    
+    fp = fopen (filename, "r");
+    if (!fp)
+	return 0;
+    
+    fscanf (fp, "%d", &pid);
+    fclose (fp);
+    return pid;
 }
 
 int read_config(cfg_t *parse_cfg)
@@ -198,7 +215,7 @@ static int not_dot_dotdot(const struct dirent *entry)
    
     if(port_is_enabled ((char *)entry->d_name))
     {
-	printf("%s name=%s. return 1\n", __func__, entry->d_name);
+	INFO("%s name=%s. return 1\n", __func__, entry->d_name);
 	return 1;
     }
     return 0;  
@@ -235,6 +252,7 @@ static int cmd_addbridge(char *bridge_name)
     int i, j, res, ifcount, brcount = 1;
     int *br_array;
     int* *ifaces_lists;
+    char filename[128];
 
     if(NULL == (br_array = malloc((brcount + 1) * sizeof(int))))
     {
@@ -249,13 +267,20 @@ static int cmd_addbridge(char *bridge_name)
 	goto out_of_memory_exit;
     }
 
+    /* Create directory for MSTP */
+    snprintf (filename, sizeof (filename), "%s", MSTP_STATUS_PATH);
+    mkdir(filename, 0755);
+
     br_array[0] = brcount;
     for(i = 1; i <= brcount; ++i)
     {
 	struct dirent **namelist;
-	char filename[128];
 
 	br_array[i] = get_index(bridge_name, "bridge");
+
+        /* Create directory for MSTP instance */
+	snprintf (filename, sizeof (filename), "%s/%d", MSTP_STATUS_PATH, i-1);
+	mkdir(filename, 0755);
 
 	if(0 > (ifcount = get_port_list(bridge_name, &namelist)))
 	{
@@ -515,6 +540,39 @@ static int reconfig(void)
     return 0;
 }
 
+static int path_is_directory (const char* path)
+{
+    struct stat s_buf;
+
+    if (stat(path, &s_buf))
+        return 0;
+
+    return S_ISDIR(s_buf.st_mode);
+}
+
+static void delete_folder_tree (const char* directory_name)
+{
+    DIR*            dp;
+    struct dirent*  ep;
+    char            p_buf[512] = {0};
+
+    dp = opendir(directory_name);
+    while ((ep = readdir(dp)) != NULL) {
+
+	if((!strcmp(ep->d_name, ".") || !strcmp(ep->d_name, "..")))
+	    continue;
+
+        sprintf(p_buf, "%s/%s", directory_name, ep->d_name);
+        if (path_is_directory(p_buf))
+            delete_folder_tree(p_buf);
+        else
+            unlink(p_buf);
+    }
+
+    closedir(dp);
+    rmdir(directory_name);
+}
+
 static void signal_handler_cb(uint32_t events, struct epoll_event_handler *h)
 {
     struct signalfd_siginfo info;
@@ -529,18 +587,25 @@ static void signal_handler_cb(uint32_t events, struct epoll_event_handler *h)
     else
     {
 	sig = info.ssi_signo;
-
 	if((sig == SIGTERM) || (sig == SIGINT) || (sig == SIGQUIT))
 	{
 	    char filename[160];
-      
+
 	    snprintf(filename, sizeof(filename), "/var/run/%s.pid", __progname);
 	    remove(filename);
+	    delete_folder_tree(MSTP_STATUS_PATH);
+	    leds_off();
 	    exit(0);
 	}
     
 	if(sig == SIGHUP)
 	    reconfig ();
+	
+	if (sig == SIGUSR1)
+	{
+	    mstp_write_status_file(1);
+	    mstp_update_status ();
+	}
     }
 }
 
@@ -588,8 +653,6 @@ static int signal_handler_init(void)
 int config(void)
 {
     signal_handler_init();
-    /* This should be 1 for displaying the ERRORS.*/
-    CTL_set_debug_level(1); 
     reconfig ();
 
     return 0;

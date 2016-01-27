@@ -3,7 +3,7 @@ version := 0.04
 
 DSOURCES = main.c epoll_loop.c brmon.c bridge_track.c libnetlink.c mstp.c \
            packet.c netif_utils.c ctl_socket_server.c hmac_md5.c driver_deps.c \
-	   config.c
+	   config.c status.c
 
 DOBJECTS = $(DSOURCES:.c=.o)
 

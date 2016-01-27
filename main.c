@@ -28,6 +28,7 @@
 
 #include <unistd.h>
 #include <syslog.h>
+#include <signal.h>
 
 #include "epoll_loop.h"
 #include "bridge_ctl.h"
@@ -50,9 +51,12 @@ static bool test_ports_trees_mesh(void);
 
 int main(int argc, char *argv[])
 {
-    int c;
+    int c, pid;
     int daemonize = 1;
     FILE *f;
+
+    /* This should be 1 for displaying the ERRORS.*/
+    CTL_set_debug_level(1);
 
     /* Sanity check */
     {
@@ -75,13 +79,29 @@ int main(int argc, char *argv[])
         INFO("Sanity checks succeeded");
     }
 
-    while((c = getopt(argc, argv, "dsv:")) != -1)
+    while((c = getopt(argc, argv, "disv:")) != -1)
     {
         switch (c)
         {
             case 'd':
                 daemonize = 0;
                 break;
+	    case 'i':
+		remove (MSTPD_STATUS_FILE);
+		pid = get_rstp_pid ();
+		
+		if (pid)
+		    kill(pid, SIGUSR1);
+		else
+		{
+		    printf("No Spanning tree is configured.\n");
+		    return 0;
+		}
+		
+		/* Busy wait here for file to be written. */
+		alarm (3);
+		while (access (MSTPD_STATUS_FILE, R_OK));
+                return 0;
             case 's':
                 print_to_syslog = 1;
                 break;
