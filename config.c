@@ -51,6 +51,7 @@
 
 #include "mstp.h"
 #include "log.h"
+#include "leds.h"
 #include "config.h"
 
 #define MAX_NUM_ATUS        64                     /* Maxumum number of ATU databases */
@@ -652,8 +653,9 @@ static int signal_handler_init(void)
 
 int config(void)
 {
-    signal_handler_init();
+    led_init();
     reconfig ();
+    signal_handler_init();
 
     return 0;
 }

@@ -44,11 +44,10 @@
 #include "netif_utils.h"
 #include "mstp.h"
 #include "log.h"
+#include "leds.h"
 #include "config.h"
 
 extern char *__progname;
-
-#define GET_NUM_FROM_PRIO(p) (__be16_to_cpu(p) & 0x0FFF)
 
 #define PRT_ID_ARGS(x) ((GET_PRIORITY_FROM_IDENTIFIER(x) >> 4) & 0x0F), \
 	GET_NUM_FROM_PRIO(x)
@@ -232,14 +231,11 @@ int set_designated_root_mac_adr(int instance_num, char *str)
 int set_mstp_root_port(int instance_num, int value, int touch)
 {
     static int old_value = -100; 
-    
-    value -= 1;
 
-    /* Only update root port when it has changed. Sysmon is monitoring the 
-       root port file with inotify and will update root status when this file 
-       is changed */
     if((old_value != value) || (touch))
     {
+	led_root(value);
+
 	if(touch)
 	    value = old_value;
 

@@ -44,6 +44,7 @@
 #include "mstp.h"
 #include "log.h"
 #include "driver.h"
+#include "config.h"
 
 static void PTSM_tick(port_t *prt);
 static bool TCSM_run(per_tree_port_t *ptp, bool dry_run);
@@ -2624,6 +2625,7 @@ static void updtRolesTree(tree_t *tree)
             }
         }
     }
+    set_mstp_root_port (tree->MSTID, GET_NUM_FROM_PRIO(tree->rootPortId), 0);
 
     /* 802.1q-2005 says, that at some point we need compare portTimes with
      * "... one for the Root Port ...". Bad IEEE! Why not mention explicit

@@ -36,6 +36,8 @@
 #define sorting_func    alphasort
 #endif
 
+#define GET_NUM_FROM_PRIO(p) (__be16_to_cpu(p) & 0x0FFF)
+
 #define MSTPD_STATUS_FILE   "/var/run/mstpd/mstpd.status"
 #define MSTPD_STATUS_FILE_TMP "/var/run/mstpd/mstpd.tmp"
 
@@ -78,12 +80,12 @@
 #define ETHTOOL_PORT_MASK_GIGA_ETHERNET_COPPER_SFP_AUTO (SUPPORTED_1000baseT_Full | \
                                                          SUPPORTED_Autoneg)
 
-
 int  config(void);
 int  get_index(const char *ifname, const char *doc);
 int  mstp_write_status_file(int display);
 void mstp_update_status(void);
 int  get_rstp_pid(void);
+int  set_mstp_root_port(int instance_num, int value, int touch);
 
 int  CTL_set_debug_level(int level);
 int  CTL_add_bridges(int *br_array, int* *ifaces_lists);
