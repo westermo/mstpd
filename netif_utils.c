@@ -109,6 +109,10 @@ int ethtool_get_speed_duplex(char *ifname, int *speed, int *duplex)
     strncpy(ifr.ifr_name, ifname, IFNAMSIZ);
     struct ethtool_cmd ecmd;
 
+    /* Do not check cpu port */
+    if (!strncmp(ifname, "cpu", 3))
+	return 0;
+
     ecmd.cmd = ETHTOOL_GSET;
     ifr.ifr_data = (caddr_t)&ecmd;
     if(0 > ioctl(netsock, SIOCETHTOOL, &ifr))
@@ -118,8 +122,30 @@ int ethtool_get_speed_duplex(char *ifname, int *speed, int *duplex)
     }
     *speed = ecmd.speed;   /* Ethtool speed is in Mbps */
     *duplex = ecmd.duplex; /* We have same convention as ethtool.
-                               0 = half, 1 = full */
+			      0 = half, 1 = full */
     return 0;
+}
+
+__u32 ethtool_supported_media (char *ifname)
+{
+    struct ifreq ifr;
+    memset(&ifr, 0, sizeof(ifr));
+    strncpy(ifr.ifr_name, ifname, IFNAMSIZ);
+    struct ethtool_cmd ecmd;
+
+    /* Do not check cpu port */
+    if (!strncmp(ifname, "cpu", 3))
+	return 0;
+
+    ecmd.cmd = ETHTOOL_GSET;
+    ifr.ifr_data = (caddr_t)&ecmd;
+    if(0 > ioctl(netsock, SIOCETHTOOL, &ifr))
+    {
+	ERROR("Cannot get port type for %s: %m\n", ifname);
+	return -1;
+    }
+
+    return ecmd.supported;
 }
 
 char *index_to_name(int index, char *name)

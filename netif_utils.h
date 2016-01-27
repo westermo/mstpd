@@ -35,6 +35,7 @@ int get_flags(char *ifname);
 int if_shutdown(char *ifname);
 
 int ethtool_get_speed_duplex(char *ifname, int *speed, int *duplex);
+__u32 ethtool_supported_media (char *ifname);
 
 bool is_bridge(char *if_name);
 
