@@ -2,7 +2,8 @@ MODE = devel
 version := 0.04
 
 DSOURCES = main.c epoll_loop.c brmon.c bridge_track.c libnetlink.c mstp.c \
-           packet.c netif_utils.c ctl_socket_server.c hmac_md5.c driver_deps.c
+           packet.c netif_utils.c ctl_socket_server.c hmac_md5.c driver_deps.c \
+	   config.c
 
 DOBJECTS = $(DSOURCES:.c=.o)
 
@@ -13,6 +14,9 @@ CTLOBJECTS = $(CTLSOURCES:.c=.o)
 CFLAGS += -Os -Wall -Werror -D_REENTRANT -D__LINUX__ -DVERSION=$(version) -I. \
           -D_GNU_SOURCE -D__LIBC_HAS_VERSIONSORT__
 
+LIBDIR    = $(STAGING)/lib
+LDLIBS   += -lconfuse
+
 ifeq ($(MODE),devel)
 CFLAGS += -g3 -O0
 endif
@@ -20,7 +24,7 @@ endif
 all: mstpd mstpctl
 
 mstpd: $(DOBJECTS)
-	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ $(DOBJECTS) $(LDFLAGS)
+	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ $(DOBJECTS) $(LDFLAGS) -L$(LIBDIR) $(LDLIBS$(LDLIBS_$@))
 
 mstpctl: $(CTLOBJECTS)
 	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ $(CTLOBJECTS) $(LDFLAGS)

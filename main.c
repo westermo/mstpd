@@ -37,6 +37,7 @@
 #include "mstp.h"
 #include "ctl_socket_server.h"
 #include "driver.h"
+#include "config.h"
 
 #define APP_NAME    "mstpd"
 
@@ -129,6 +130,8 @@ int main(int argc, char *argv[])
     TST(netsock_init() == 0, -1);
     TST(init_bridge_ops() == 0, -1);
 
+    config();
+    
     c = epoll_main_loop();
     driver_mstp_fini();
 
