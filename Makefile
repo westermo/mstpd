@@ -1,5 +1,5 @@
 MODE = devel
-version := 0.04
+version := g6dba9b1
 
 DSOURCES = main.c epoll_loop.c brmon.c bridge_track.c libnetlink.c mstp.c \
            packet.c netif_utils.c ctl_socket_server.c hmac_md5.c driver_deps.c \
@@ -55,6 +55,9 @@ romfs: all
 	$(ROMFSINST) /sbin/mstpd
 	$(ROMFSINST) /sbin/mstpctl
 	$(ROMFSINST) /sbin/bridge-stp
+
+release:
+	@git archive --format=tar --prefix=mstpd-$(version)/ $(version) | bzip2 >../mstpd-$(version).tar.bz2
 
 #depend:
 #	makedepend -I. -Y *.c -f .depend
