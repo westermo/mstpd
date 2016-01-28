@@ -22,12 +22,13 @@
 
 ******************************************************************************/
 #include <stdio.h>
+#include <string.h>
 #include <ctype.h>
 
 #include "log.h"
 
 #define prod_family         "/boot/signature/family"
-
+static char family_str[50] = {""};
 static char green_led[200];
 
 static void change_to_lower_case(char *str)
@@ -52,91 +53,75 @@ static char *read_str_from_file(char *file, char *str)
     return str;
 }
 
-static int write_val_to_file(char *file, int val)
+static void write_val_to_file(char *file, int val)
 {
     FILE *fd = NULL;
 
     fd = fopen(file, "w");
     if (fd == NULL)
-	return 1;
+	return;
    
     fprintf(fd, "%d", val);
     fclose(fd);
-    return 0;
+    return;
 }
 
-static int write_str_to_file(char *file, char *str)
+static void write_str_to_file(char *file, char *str)
 {
     FILE *fd = NULL;
 
     fd = fopen(file, "w");
     if(fd == NULL)
-	return 1;
+	return;
     
     fprintf(fd, str, 1);
     fclose(fd);
-    return 0;
+    return;
 }
 
-static int led_flash(char *led_dir, int delay)
+static void led_flash(char *led_dir, int delay)
 {
     char fname[50];
-    int ret;
-   
+
     sprintf(fname, "%s/%s", led_dir, "trigger");
-    ret = write_str_to_file(fname, "timer");
+    write_str_to_file(fname, "timer");
 
     sprintf(fname, "%s/%s", led_dir, "delay_on");
-    ret += write_val_to_file(fname, delay);
+    write_val_to_file(fname, delay);
 
     sprintf(fname, "%s/%s", led_dir, "delay_off");
-    ret += write_val_to_file(fname, delay);
+    write_val_to_file(fname, delay);
 
-    return ret;
+    return;
 }
 
-static int led_on(char *led_dir, int on)
+static void led_on(char *led_dir, int on)
 {
     char fname[50];
-    int ret;
 
-    if(!sizeof(prod_family))
-	return 0;
-   
     sprintf(fname, "%s/%s", led_dir, "brightness");
-    ret = write_val_to_file(fname, on);
+    write_val_to_file(fname, on);
 
-    return ret;
+    return;
 }
 
 void led_root(int root_switch)
 {
-    int ret;
-
-    if(!sizeof(prod_family))
-	return;
-
     if (!root_switch)
-	ret = led_flash(green_led, 1000);
+	led_flash(green_led, 1000);
     else
-	ret = led_on(green_led, 1);
-   
-    if(ret)
-	ERROR("%s - Error setting LED status\n", __FUNCTION__);
+	led_on(green_led, 1);
 }
 
 void leds_off(void)
 {
-    if(led_on(green_led, 0))
-	ERROR("%s - Error setting LED status\n", __FUNCTION__);
+    led_on(green_led, 0);
 }
-
 
 void led_init(void)
 {
     char red_led[200];
-    char family_str[50];
-   
+
     if(read_str_from_file(prod_family, family_str))
     {
 	change_to_lower_case(family_str);
@@ -144,8 +129,7 @@ void led_init(void)
 	sprintf(green_led, "/sys/class/leds/%s:green:rstp", family_str);
 	LOG("%s - Family %s, %s, %s\n", __FUNCTION__, family_str, red_led, green_led);
 
-	if(led_on(red_led, 0))
-	    ERROR("%s - Error setting LED status\n", __FUNCTION__);
+	led_on(red_led, 0);
     }
 }
 

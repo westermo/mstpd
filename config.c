@@ -118,7 +118,7 @@ int get_rstp_pid(void)
 {
     char filename[] = "/var/run/mstpd.pid";
     FILE *fp;
-    int pid=0;
+    int pid = 0;
     
     fp = fopen (filename, "r");
     if (!fp)

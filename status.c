@@ -358,7 +358,6 @@ void mstp_update_status(void)
     {
 	int port_index = 0;
 	char *port_p;
-	int ret;
 	CIST_PortStatus ps;
 	cfg_t * cfg_port = cfg_getnsec(parse_cfg, "ports", i);
 
@@ -373,7 +372,7 @@ void mstp_update_status(void)
 	    continue;
 	}
 
-	if((ret = CTL_get_cist_port_status(br_index, port_index, &ps)))
+	if(CTL_get_cist_port_status(br_index, port_index, &ps))
 	{
 	    LOG("%s:%s Failed to get port state\n", br_name, port_p/* bridge.ifaces[i] */);
 	    continue;
@@ -401,34 +400,33 @@ void mstp_update_status(void)
 
 int mstp_write_status_file(int display)
 {
-    char *br_name = INTERFACE_BRIDGE;
+    char *br_name = INTERFACE_BRIDGE, root_port_name[IFNAMSIZ], temp[32] = "";
     CIST_BridgeStatus s;
-    char root_port_name[IFNAMSIZ];
     int br_index = get_index(br_name, "bridge"), on = 0, i;
     FILE *fd = NULL;
-    char temp[32] = "";
     cfg_t *parse_cfg2;
 
     if(0 > br_index)
     {
 	ERROR("MSTPD SIGUSR1 error in bridge %s br_index %d.", br_name, br_index);
-	return 1;
+	return -1;
     }
 
     if(CTL_get_cist_bridge_status(br_index, &s, root_port_name))
     {
 	ERROR("Failed to get bridge status %s (index %d)\n", br_name, br_index);
-	return 1;
+	return -1;
     }
 
     fd = fopen(MSTPD_STATUS_FILE_TMP, "w");
     if(fd == NULL)
     {
 	ERROR("\nOpen user status file ......................[FAIL]\n");
-	return 1;
+	return -1;
     }
     on = get_rstp_pid();
-    if (!on) return 1;
+    if (!on)
+	goto out;
 
     snprintf(temp, sizeof(temp), "running as PID %d", on);
 
@@ -441,11 +439,10 @@ int mstp_write_status_file(int display)
 	    __be16_to_cpu(s.bridge_id.s.priority) >> 12, __be16_to_cpu(s.bridge_id.s.priority));
     fprintf(fd, "Bridge Max Age            : %-3d          Bridge Hello Time : %u\n",
 	    s.bridge_max_age, s.bridge_hello_time);
-    fprintf(fd, "Bridge Forward Delay      : %-3d          Tx Hold Count     : %d\n",
+    fprintf(fd, "Bridge Forward Delay      : %-3d          Tx Hold Count     : %u\n",
 	    s.bridge_forward_delay, s.tx_hold_count);
     fprintf(fd, "Topology Change Count     : %u\n", s.topology_change_count);
     fprintf(fd, "Time Since Last Change    : %u\n", s.time_since_topology_change);
-
     sys_ether_ntoa(s.designated_root.s.mac_address, temp, sizeof(temp));
     fprintf(fd, "Designated Root           : %s\n", temp);
     fprintf(fd, "Designated Root Path Cost : %u\n", s.root_path_cost);
@@ -459,21 +456,20 @@ int mstp_write_status_file(int display)
 
     parse_cfg2 = parse_conf("/etc/mstpd-0.conf");
     if(!parse_cfg2)
-	return 1;
+	goto out;
 
     for(i = 0; i < cfg_size(parse_cfg2, "ports"); i++)
     {
 	CIST_PortStatus ps;
 	int port_index = 0;
 	char *port_p;
-	int ret = -1;
 
 	cfg_t * cfg_port = cfg_getnsec(parse_cfg2, "ports", i);
 
 	port_p = cfg_getstr(cfg_port, "ifname");
 	port_index = if_nametoindex(port_p);
 
-	if((ret = CTL_get_cist_port_status(br_index, port_index, &ps)))
+	if(CTL_get_cist_port_status(br_index, port_index, &ps))
 	{
 	    LOG ("%s:%s Failed to get port state\n", br_name, port_p);
 	    continue;
@@ -489,12 +485,15 @@ int mstp_write_status_file(int display)
 		ps.oper_edge_port ? "True" : "False",
 		temp);
     }
-   
-    fclose(fd);
 
+    fclose(fd);
     if(display)
 	system("/bin/cat " MSTPD_STATUS_FILE_TMP);
 
     rename(MSTPD_STATUS_FILE_TMP, MSTPD_STATUS_FILE);
     return 0;
+    
+out:
+    fclose(fd);
+    return -1;
 }
