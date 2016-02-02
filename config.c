@@ -214,7 +214,7 @@ static int not_dot_dotdot(const struct dirent *entry)
     if(strchr (entry->d_name, '.'))
 	return 0;
    
-    if(port_is_enabled ((char *)entry->d_name))
+    if(port_is_enabled((char *)entry->d_name))
     {
 	INFO("%s name=%s. return 1\n", __func__, entry->d_name);
 	return 1;
@@ -524,16 +524,19 @@ static int reconfig(void)
 
 	ifname = cfg_getstr(cfg_port, "ifname");
 
-	port_index = if_nametoindex(ifname);
-	if(!port_index)
+	if(port_is_enabled(ifname))
 	{
-	    ERROR("Could not find ifindex for %s", ifname);
-	    continue;
-	}
+	    port_index = if_nametoindex(ifname);
+	    if(!port_index)
+	    {
+		ERROR("Could not find ifindex for %s", ifname);
+		continue;
+	    }
 
-	mstp_set_port_edge(br_index, port_index, stp_port_conf.port_conf[port_index].edge);
-	mstp_set_port_path_cost(br_index, port_index,
-				stp_port_conf.port_conf[port_index].port_path_cost);
+	    mstp_set_port_edge(br_index, port_index, stp_port_conf.port_conf[port_index].edge);
+	    mstp_set_port_path_cost(br_index, port_index,
+				    stp_port_conf.port_conf[port_index].port_path_cost);
+	}
     }
     cfg_free(parse_cfg);
     close(sd);

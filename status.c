@@ -462,28 +462,37 @@ int mstp_write_status_file(int display)
     {
 	CIST_PortStatus ps;
 	int port_index = 0;
-	char *port_p;
+	char *port_p, port_id[50], path_cost[50];
+	int ena;
 
 	cfg_t * cfg_port = cfg_getnsec(parse_cfg2, "ports", i);
 
 	port_p = cfg_getstr(cfg_port, "ifname");
+
 	port_index = if_nametoindex(port_p);
 
-	if(CTL_get_cist_port_status(br_index, port_index, &ps))
+	if((ena = port_is_enabled(port_p)))
 	{
-	    LOG ("%s:%s Failed to get port state\n", br_name, port_p);
-	    continue;
+	    if(CTL_get_cist_port_status(br_index, port_index, &ps))
+	    {
+		LOG("%s:%s Failed to get port state\n", br_name, port_p);
+		continue;
+	    }
+
+	    sprintf(port_id, "%d", ps.port_id & 0xff);
+	    sprintf(path_cost, "%d", ps.external_port_path_cost);
+
+	    sys_ether_ntoa(ps.designated_bridge.s.mac_address, temp, sizeof(temp));
 	}
 
-	sys_ether_ntoa(ps.designated_bridge.s.mac_address, temp, sizeof(temp));
-	fprintf(fd, "%-7s  %-11.11s  %-9d   %-8d  %-10s %-5s  %s\n",
+	fprintf(fd, "%-7s  %-11.11s  %-9s   %-8s  %-10s %-5s  %s\n",
 		port_p,
 		port_typestr(port_p),
-		ps.external_port_path_cost,
-		ps.port_id & 0xff,
-		port_state_to_string (ps.state, 1),
-		ps.oper_edge_port ? "True" : "False",
-		temp);
+		ena ? path_cost : "N/A",
+		ena ? port_id : "N/A",
+		port_state_to_string (ena ? ps.state : 0, 1),
+		ena ? ps.oper_edge_port ? "True" : "False" : "" ,
+		ena ? temp : "" );
     }
 
     fclose(fd);

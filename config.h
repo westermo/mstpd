@@ -86,6 +86,7 @@ int  mstp_write_status_file(int display);
 void mstp_update_status(void);
 int  get_rstp_pid(void);
 int  set_mstp_root_port(int instance_num, int value, int touch);
+int  port_is_enabled(char * ifname);
 
 int  CTL_set_debug_level(int level);
 int  CTL_add_bridges(int *br_array, int* *ifaces_lists);

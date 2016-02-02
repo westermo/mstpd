@@ -302,6 +302,13 @@ int bridge_notify(int br_index, int if_index, bool newlink, unsigned flags)
                         break;
                     }
             }
+	    return 0;
+	    /* We would not like to create a new interface on the fly. At configuration
+	       all ports which have MSTP enabled are added to MSTP, MSTP can then be
+	       disabled on a port event thou the port is in the bridge where MSTP is running */
+#if 0
+	    prt = create_if(br, if_index);
+#endif
             prt = create_if(br, if_index);
         }
         if(!prt)
