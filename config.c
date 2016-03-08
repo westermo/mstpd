@@ -129,7 +129,7 @@ int get_rstp_pid(void)
     return pid;
 }
 
-int read_config(cfg_t *parse_cfg)
+static int read_config(cfg_t *parse_cfg)
 {
     size_t i;
     int forward_delay = 0;

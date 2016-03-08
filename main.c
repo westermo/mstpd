@@ -39,6 +39,7 @@
 #include "ctl_socket_server.h"
 #include "driver.h"
 #include "config.h"
+#include "snmp.h"
 
 #define APP_NAME    "mstpd"
 
@@ -153,6 +154,9 @@ int main(int argc, char *argv[])
     TST(init_bridge_ops() == 0, -1);
 
     config();
+#if defined HAVE_SNMP
+    snmp_init();
+#endif
     
     c = epoll_main_loop();
     driver_mstp_fini();

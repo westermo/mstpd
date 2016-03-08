@@ -3,7 +3,7 @@ version := g6dba9b1
 
 DSOURCES = main.c epoll_loop.c brmon.c bridge_track.c libnetlink.c mstp.c \
            packet.c netif_utils.c ctl_socket_server.c hmac_md5.c driver_deps.c \
-	   config.c status.c leds.c
+	   config.c status.c leds.c snmp.c
 
 DOBJECTS = $(DSOURCES:.c=.o)
 
@@ -12,10 +12,10 @@ CTLSOURCES = ctl_main.c ctl_socket_client.c
 CTLOBJECTS = $(CTLSOURCES:.c=.o)
 
 CFLAGS += -Os -Wall -Werror -D_REENTRANT -D__LINUX__ -DVERSION=$(version) -I. \
-          -D_GNU_SOURCE -D__LIBC_HAS_VERSIONSORT__
+          -D_GNU_SOURCE -D__LIBC_HAS_VERSIONSORT__ -DHAVE_SNMP
 
 LIBDIR    = $(STAGING)/lib
-LDLIBS   += -lconfuse
+LDLIBS   += -lconfuse -lnetsnmp -lnetsnmpagent -lnetsnmpmibs -lcrypto -lnl-3
 
 ifeq ($(MODE),devel)
 CFLAGS += -g3 -O0
