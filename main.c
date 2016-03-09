@@ -160,6 +160,9 @@ int main(int argc, char *argv[])
     
     c = epoll_main_loop();
     driver_mstp_fini();
+#if defined HAVE_SNMP
+    snmp_fini();
+#endif
 
     return c;
 }

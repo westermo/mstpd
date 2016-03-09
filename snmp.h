@@ -27,5 +27,6 @@
 #define SNMP_H
 
 void snmp_init(void);
+void snmp_fini(void);
 
 #endif
