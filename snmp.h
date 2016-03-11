@@ -47,6 +47,7 @@
 #define oid_dot1dStpPortTable               oid_dot1dStp, 15
 #define oid_dot1dStpVersion                 oid_dot1dStp, 16
 #define oid_dot1dStpTxHoldCount             oid_dot1dStp, 17
+#define oid_dot1dStpExtPortTable            oid_dot1dStp, 19
 
 void snmp_init(void);
 void snmp_fini(void);
@@ -56,3 +57,4 @@ int snmp_commit(void);
 
 void snmp_init_mib_dot1d_stp(void);
 void snmp_init_mib_dot1d_stp_port_table(void);
+void snmp_init_mib_dot1d_stp_ext_port_table(void);

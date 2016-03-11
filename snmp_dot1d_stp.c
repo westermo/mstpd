@@ -1,5 +1,5 @@
 /*****************************************************************************
-  Copyright (c) 2014 Westermo Teleindustri AB
+  Copyright (c) 2016 Westermo Teleindustri AB
 
   This program is free software; you can redistribute it and/or modify it
   under the terms of the GNU General Public License as published by the Free

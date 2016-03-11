@@ -46,6 +46,7 @@ static void snmp_init_mibs(void)
 {
     snmp_init_mib_dot1d_stp();
     snmp_init_mib_dot1d_stp_port_table();
+    snmp_init_mib_dot1d_stp_ext_port_table();
 }
 
 void snmp_init(void)
