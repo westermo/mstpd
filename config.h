@@ -29,6 +29,7 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 #include <paths.h>              /* _PATH_VARRUN */
+#include <confuse.h>
 
 #ifdef  __LIBC_HAS_VERSIONSORT__
 #define sorting_func    versionsort
@@ -45,6 +46,8 @@
 #define SYSFS_PATH_MAX      256
 #define MSTP_STATUS_PATH    "/var/run/mstpd"
 #define INTERFACE_BRIDGE    "br0"
+
+#define MSTPD_CONFIG_FILE   "/etc/mstpd-0.conf"
 
 #define ETHTOOL_PORT_MASK_FAST_ETHERNET (SUPPORTED_10baseT_Half |	\
 					 SUPPORTED_10baseT_Full |	\
@@ -81,6 +84,7 @@
                                                          SUPPORTED_Autoneg)
 
 int  config(void);
+cfg_t *parse_conf(char *conf);
 int  get_index(const char *ifname, const char *doc);
 int  mstp_write_status_file(int display);
 void mstp_update_status(void);

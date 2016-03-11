@@ -490,7 +490,7 @@ static int reconfig(void)
     LOG("Entering reconfig");
     memset(&stp_port_conf, 0, sizeof(stp_port_conf));
    
-    parse_cfg = parse_conf("/etc/mstpd-0.conf");
+    parse_cfg = parse_conf(MSTPD_CONFIG_FILE);
     if(!parse_cfg || read_config(parse_cfg))
     {
 	ERROR("Couldn't read configuration from file!!!");

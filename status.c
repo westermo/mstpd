@@ -350,7 +350,7 @@ void mstp_update_status(void)
 
     set_hold_count(s.tx_hold_count);
 
-    parse_cfg = parse_conf("/etc/mstpd-0.conf");
+    parse_cfg = parse_conf(MSTPD_CONFIG_FILE);
     if(!parse_cfg)
 	return;
 
@@ -454,7 +454,7 @@ int mstp_write_status_file(int display)
     fprintf(fd, "Port     Type         Cost        Priority  State      Edge   Designated Bridge\n");
     fprintf(fd, "===============================================================================\n");
 
-    parse_cfg2 = parse_conf("/etc/mstpd-0.conf");
+    parse_cfg2 = parse_conf(MSTPD_CONFIG_FILE);
     if(!parse_cfg2)
 	goto out;
 
