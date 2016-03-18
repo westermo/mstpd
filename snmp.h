@@ -27,6 +27,15 @@
 #include <net-snmp/net-snmp-includes.h>
 #include <net-snmp/agent/net-snmp-agent-includes.h>
 
+/* standard nodes */
+#define oid_iso                             1                 /* 1 */
+#define oid_org                             oid_iso, 3        /* 1.3 */
+#define oid_dod                             oid_org, 6        /* 1.3.6 */
+#define oid_internet                        oid_dod, 1        /* 1.3.6.1 */
+#define oid_mgmt                            oid_internet, 2   /* 1.3.6.1.2 */
+#define oid_mib2                            oid_mgmt, 1       /* 1.3.6.1.2.1 */
+#define oid_dot1dBridge                     oid_mib2, 17      /* 1.3.6.1.2.1.17 */
+
 /* iso(1).org(3).dod(6).internet(1).mgmt(2).mib-2(1).dot1dBridge(17) */
 #define oid_dot1dStp                        oid_dot1dBridge, 2
 /* iso(1).org(3).dod(6).internet(1).mgmt(2).mib-2(1).dot1dBridge(17).dot1dBridge(2) */
@@ -49,11 +58,10 @@
 #define oid_dot1dStpTxHoldCount             oid_dot1dStp, 17
 #define oid_dot1dStpExtPortTable            oid_dot1dStp, 19
 
+#define ELEMENT_SIZE(s,e) sizeof(((s*)0)->e)
+
 void snmp_init(void);
 void snmp_fini(void);
-
-int snmp_set_ro(long idx, void* value);
-int snmp_commit(void);
 
 void snmp_init_mib_dot1d_stp(void);
 void snmp_init_mib_dot1d_stp_port_table(void);

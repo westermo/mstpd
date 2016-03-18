@@ -32,16 +32,6 @@
 #include "config.h"
 #include "snmp.h"
 
-int snmp_commit(void)
-{
-   return 0;
-}
-
-int snmp_set_ro(long idx, void* value)
-{
-   return SNMP_ERR_READONLY;
-}
-
 static void snmp_init_mibs(void)
 {
     snmp_init_mib_dot1d_stp();

@@ -32,7 +32,7 @@
 #include "config.h"
 #include "snmp.h"
 
-#include "snmp/weos.h"
+#include "libnsh/table.h"
 
 #define MIN_COLUMN 1
 #define MAX_COLUMN 11
@@ -56,20 +56,19 @@ struct table_data_t {
 
 static struct table_data_t *table_head = NULL;
 
-static NetsnmpCacheLoad table_load;
-static NetsnmpCacheFree table_free;
+static NetsnmpCacheLoad         table_load;
+static NetsnmpCacheFree         table_free;
 static Netsnmp_First_Data_Point table_get_first;
 static Netsnmp_Next_Data_Point  table_get_next;
-static Netsnmp_Node_Handler table_handler;
+static Netsnmp_Node_Handler     table_handler;
 
-static table_index_t idx[] = {
-    INDEX (ASN_INTEGER, table_data_t, port, sizeof(long)),
+static nsh_table_index_t idx[] = {
+    NSH_TABLE_INDEX (ASN_INTEGER, table_data_t, port, 0),
 };
 
-TABLE_INDEX (table_idx, idx)
-TABLE_FREE (table_free, table_data_t, table_head)
-TABLE_GET_FIRST (table_get_first, table_get_next)
-TABLE_GET_NEXT (table_get_next, table_data_t, table_head, table_idx, 1)
+nsh_table_free(table_free, table_data_t, table_head)
+nsh_table_get_first(table_get_first, table_get_next, table_head)
+nsh_table_get_next(table_get_next, table_data_t, idx, 1)
 
 static void table_create_entry(long port,
 			       long priority,
@@ -89,17 +88,17 @@ static void table_create_entry(long port,
     if (!entry)
        return;
 
-    TABLE_ADD(entry, port);
-    TABLE_ADD(entry, priority);
-    TABLE_ADD(entry, state);
-    TABLE_ADD(entry, enable);
-    TABLE_ADD(entry, path_cost);
-    TABLE_ADD_ARRAY(entry, designated_root,   table_data_t);
-    TABLE_ADD(entry, designated_cost);
-    TABLE_ADD_ARRAY(entry, designated_bridge, table_data_t);
-    TABLE_ADD_ARRAY(entry, designated_port,   table_data_t);
-    TABLE_ADD(entry,forward_transitions);
-    TABLE_ADD(entry, path_cost32);
+    entry->port                = port;
+    entry->priority            = priority;
+    entry->state               = state;
+    entry->enable              = enable;
+    entry->path_cost           = path_cost;
+    memcpy(entry->designated_root,   designated_root,   ELEMENT_SIZE(table_data_t, designated_root));
+    entry->designated_cost     = designated_cost;
+    memcpy(entry->designated_bridge, designated_bridge, ELEMENT_SIZE(table_data_t, designated_bridge));
+    memcpy(entry->designated_port,   designated_port,   ELEMENT_SIZE(table_data_t, designated_port));
+    entry->forward_transitions = forward_transitions;
+    entry->path_cost32         = path_cost32;
 
     entry->next = table_head;
     table_head  = entry;
@@ -187,21 +186,21 @@ static int table_handler(netsnmp_mib_handler *handler,
 			 netsnmp_agent_request_info *reqinfo,
 			 netsnmp_request_info *requests)
 {
-    table_entry_t table[] = {
-        TABLE_ENTRY_RO (ASN_INTEGER,   table_data_t, port,                sizeof(long)),
-        TABLE_ENTRY_RO (ASN_INTEGER,   table_data_t, priority,            sizeof(long)),
-        TABLE_ENTRY_RO (ASN_INTEGER,   table_data_t, state,               sizeof(long)),
-        TABLE_ENTRY_RW (ASN_INTEGER,   table_data_t, enable,              sizeof(long),                                   snmp_set_ro),
-        TABLE_ENTRY_RW (ASN_INTEGER,   table_data_t, path_cost,           sizeof(long),                                   snmp_set_ro),
-        TABLE_ENTRY_RO (ASN_OCTET_STR, table_data_t, designated_root,     ELEMENT_SIZE(table_data_t, designated_root)),
-        TABLE_ENTRY_RO (ASN_INTEGER,   table_data_t, designated_cost,     sizeof(long)),
-        TABLE_ENTRY_RO (ASN_OCTET_STR, table_data_t, designated_bridge,   ELEMENT_SIZE(table_data_t, designated_bridge)),
-        TABLE_ENTRY_RO (ASN_OCTET_STR, table_data_t, designated_port,     ELEMENT_SIZE(table_data_t, designated_port)),
-        TABLE_ENTRY_RO (ASN_COUNTER,   table_data_t, forward_transitions, sizeof(long)),
-        TABLE_ENTRY_RW (ASN_INTEGER,   table_data_t, path_cost32,         sizeof(long),                                   snmp_set_ro),
+    nsh_table_entry_t table[] = {
+        NSH_TABLE_ENTRY_RO (ASN_INTEGER,   table_data_t, port,                0),
+        NSH_TABLE_ENTRY_RO (ASN_INTEGER,   table_data_t, priority,            0),
+        NSH_TABLE_ENTRY_RO (ASN_INTEGER,   table_data_t, state,               0),
+        NSH_TABLE_ENTRY_RO (ASN_INTEGER,   table_data_t, enable,              0),   /* XXX: FIXME! RW support, see __dot1d_set_stp_port_enable */
+        NSH_TABLE_ENTRY_RO (ASN_INTEGER,   table_data_t, path_cost,           0),   /* XXX: FIXME! RW support, see __dot1d_set_stp_port_path_cost */
+        NSH_TABLE_ENTRY_RO (ASN_OCTET_STR, table_data_t, designated_root,     0),
+        NSH_TABLE_ENTRY_RO (ASN_INTEGER,   table_data_t, designated_cost,     0),
+        NSH_TABLE_ENTRY_RO (ASN_OCTET_STR, table_data_t, designated_bridge,   0),
+        NSH_TABLE_ENTRY_RO (ASN_OCTET_STR, table_data_t, designated_port,     0),
+        NSH_TABLE_ENTRY_RO (ASN_COUNTER,   table_data_t, forward_transitions, 0),
+        NSH_TABLE_ENTRY_RO (ASN_INTEGER,   table_data_t, path_cost32,         0),   /* XXX: FIXME! RW support, see __dot1d_set_stp_port_path_cost */
     };
 
-    return handle_table(reqinfo, requests, table, ARRAY_ELEMENTS (table), snmp_commit);
+    return nsh_handle_table(reqinfo, requests, table, COUNT_OF (table));
 }
 
 void snmp_init_mib_dot1d_stp_port_table(void)
@@ -209,19 +208,19 @@ void snmp_init_mib_dot1d_stp_port_table(void)
     oid table_oid[] = { oid_dot1dStpPortTable };
     int index[]     = { ASN_INTEGER };
 
-    register_table("dot1dStpPortTable",
-                   table_oid,
-                   OID_LENGTH (table_oid),
-                   MIN_COLUMN,
-                   MAX_COLUMN,
-                   index,
-		   ARRAY_ELEMENTS (index),
-                   table_handler,
-                   table_get_first,
-                   table_get_next,
-                   table_load,
-                   table_free,
-                   HANDLER_CAN_RWRITE);
+    nsh_register_table("dot1dStpPortTable",
+		       table_oid,
+		       OID_LENGTH (table_oid),
+		       MIN_COLUMN,
+		       MAX_COLUMN,
+		       index,
+		       COUNT_OF (index),
+		       table_handler,
+		       table_get_first,
+		       table_get_next,
+		       table_load,
+		       table_free,
+		       HANDLER_CAN_RWRITE);
 }
 
 #endif

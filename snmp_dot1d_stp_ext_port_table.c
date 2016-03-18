@@ -30,7 +30,7 @@
 #include "config.h"
 #include "snmp.h"
 
-#include "snmp/weos.h"
+#include "libnsh/table.h"
 
 #define MIN_COLUMN 1
 #define MAX_COLUMN 6
@@ -56,14 +56,13 @@ static Netsnmp_First_Data_Point table_get_first;
 static Netsnmp_Next_Data_Point  table_get_next;
 static Netsnmp_Node_Handler table_handler;
 
-static table_index_t idx[] = {
-    INDEX (ASN_INTEGER, table_data_t, port, sizeof(long)),
+static nsh_table_index_t idx[] = {
+   NSH_TABLE_INDEX (ASN_INTEGER, table_data_t, port, 0),
 };
 
-TABLE_INDEX (table_idx, idx)
-TABLE_FREE (table_free, table_data_t, table_head)
-TABLE_GET_FIRST (table_get_first, table_get_next)
-TABLE_GET_NEXT (table_get_next, table_data_t, table_head, table_idx, 1)
+nsh_table_free(table_free, table_data_t, table_head)
+nsh_table_get_first(table_get_first, table_get_next, table_head)
+nsh_table_get_next(table_get_next, table_data_t, idx, 1)
 
 static void table_create_entry(long port,
                                long protocol_migration,
@@ -79,13 +78,13 @@ static void table_create_entry(long port,
      if (!entry)
          return;
 
-     TABLE_ADD(entry, port);
-     TABLE_ADD(entry, protocol_migration);
-     TABLE_ADD(entry, admin_edge_port);
-     TABLE_ADD(entry, oper_edge_port);
-     TABLE_ADD(entry, admin_point_to_point);
-     TABLE_ADD(entry, oper_point_to_point);
-     TABLE_ADD(entry, admin_path_cost);
+     entry->port                 = port;
+     entry->protocol_migration   = protocol_migration;
+     entry->admin_edge_port      = admin_edge_port;
+     entry->oper_edge_port       = oper_edge_port;
+     entry->admin_point_to_point = admin_point_to_point;
+     entry->oper_point_to_point  = oper_point_to_point;
+     entry->admin_path_cost      = admin_path_cost;
 
      entry->next = table_head;
      table_head  = entry;
@@ -158,16 +157,16 @@ static int table_handler(netsnmp_mib_handler *handler,
 			 netsnmp_agent_request_info *reqinfo,
 			 netsnmp_request_info *requests)
 {
-    table_entry_t table[] = {
-        TABLE_ENTRY_RO (ASN_INTEGER, table_data_t, protocol_migration,   sizeof(long)),
-        TABLE_ENTRY_RW (ASN_INTEGER, table_data_t, admin_edge_port,      sizeof(long), snmp_set_ro),
-        TABLE_ENTRY_RO (ASN_INTEGER, table_data_t, oper_edge_port,       sizeof(long)),
-        TABLE_ENTRY_RO (ASN_INTEGER, table_data_t, admin_point_to_point, sizeof(long)),
-        TABLE_ENTRY_RO (ASN_INTEGER, table_data_t, oper_point_to_point,  sizeof(long)),
-        TABLE_ENTRY_RW (ASN_INTEGER, table_data_t, admin_path_cost,      sizeof(long), snmp_set_ro)
+    nsh_table_entry_t table[] = {
+        NSH_TABLE_ENTRY_RO (ASN_INTEGER, table_data_t, protocol_migration,   0),
+        NSH_TABLE_ENTRY_RO (ASN_INTEGER, table_data_t, admin_edge_port,      0),   /* XXX: FIXME! RW support, see __dot1d_set_stp_port_admin_edge */
+        NSH_TABLE_ENTRY_RO (ASN_INTEGER, table_data_t, oper_edge_port,       0),
+        NSH_TABLE_ENTRY_RO (ASN_INTEGER, table_data_t, admin_point_to_point, 0),
+        NSH_TABLE_ENTRY_RO (ASN_INTEGER, table_data_t, oper_point_to_point,  0),
+        NSH_TABLE_ENTRY_RO (ASN_INTEGER, table_data_t, admin_path_cost,      0)    /* XXX: FIXME! RW support, see __dot1d_set_stp_port_path_cost */
     };
 
-    return handle_table(reqinfo, requests, table, ARRAY_ELEMENTS (table), snmp_commit);
+    return nsh_handle_table(reqinfo, requests, table, COUNT_OF (table));
 }
 
 void snmp_init_mib_dot1d_stp_ext_port_table(void)
@@ -175,19 +174,19 @@ void snmp_init_mib_dot1d_stp_ext_port_table(void)
     oid table_oid[] = { oid_dot1dStpExtPortTable };
     int index[]     = { ASN_INTEGER };
 
-    register_table("dot1dStpExtPortTable",
-                   table_oid,
-                   OID_LENGTH (table_oid),
-                   MIN_COLUMN,
-                   MAX_COLUMN,
-                   index,
-		   ARRAY_ELEMENTS (index),
-                   table_handler,
-                   table_get_first,
-                   table_get_next,
-                   table_load,
-                   table_free,
-                   HANDLER_CAN_RWRITE);
+    nsh_register_table("dot1dStpExtPortTable",
+		       table_oid,
+		       OID_LENGTH (table_oid),
+		       MIN_COLUMN,
+		       MAX_COLUMN,
+		       index,
+		       COUNT_OF (index),
+		       table_handler,
+		       table_get_first,
+		       table_get_next,
+		       table_load,
+		       table_free,
+		       HANDLER_CAN_RWRITE);
 }
 
 #endif

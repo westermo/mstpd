@@ -32,7 +32,7 @@
 #include "config.h"
 #include "snmp.h"
 
-#include "snmp/weos.h"
+#include "libnsh/scalar.h"
 
 #define SNMP_STP_PRIORITY              2
 #define SNMP_STP_TIME_SINCE_TOP_CHANGE 3
@@ -115,61 +115,41 @@ static int snmp_get_dot1d_stp(void *value, int len, int id)
     return SNMP_ERR_NOERROR;
 }
 
-static int snmp_set_dot1d_stp(void *value, int id)
-{
-    int ret = 0;
-
-    switch (id) {
-        case SNMP_STP_PRIORITY:
-        case SNMP_STP_BRIDGE_MAX_AGE:
-        case SNMP_STP_BRIDGE_HELLO_TIME:
-        case SNMP_STP_BRIDGE_FORWARD_DELAY:
-            return SNMP_ERR_READONLY;
-        default:
-            return SNMP_ERR_GENERR;
-    }
-
-    if (ret != 0)
-        return SNMP_ERR_BADVALUE;
-
-    return SNMP_ERR_NOERROR;
-}
-
-OBJECT_HANDLER_CONST    (dot1dStpProtocolSpecification,   ASN_INTEGER,   3);   /* XXX: FIXME! Protocol specification is always 802.1d */
-OBJECT_HANDLER_GROUP_RW (dot1dStpPriority,                ASN_INTEGER,   snmp_get_dot1d_stp, SNMP_STP_PRIORITY,              VAL_INTLEN, VAL_INTLEN, snmp_set_dot1d_stp, snmp_commit);
-OBJECT_HANDLER_GROUP_RO (dot1dStpTimeSinceTopologyChange, ASN_TIMETICKS, snmp_get_dot1d_stp, SNMP_STP_TIME_SINCE_TOP_CHANGE, VAL_INTLEN, VAL_INTLEN);
-OBJECT_HANDLER_GROUP_RO (dot1dStpTopChanges,              ASN_COUNTER,   snmp_get_dot1d_stp, SNMP_STP_TOP_CHANGES,           VAL_INTLEN, VAL_INTLEN);
-OBJECT_HANDLER_GROUP_RO (dot1dStpDesignatedRoot,          ASN_OCTET_STR, snmp_get_dot1d_stp, SNMP_STP_DESIGNATED_ROOT,       8,          8);
-OBJECT_HANDLER_GROUP_RO (dot1dStpRootCost,                ASN_INTEGER,   snmp_get_dot1d_stp, SNMP_STP_ROOT_COST,             VAL_INTLEN, VAL_INTLEN);
-OBJECT_HANDLER_GROUP_RO (dot1dStpRootPort,                ASN_INTEGER,   snmp_get_dot1d_stp, SNMP_STP_ROOT_PORT,             VAL_INTLEN, VAL_INTLEN);
-OBJECT_HANDLER_GROUP_RO (dot1dStpMaxAge,                  ASN_INTEGER,   snmp_get_dot1d_stp, SNMP_STP_MAX_AGE,               VAL_INTLEN, VAL_INTLEN);
-OBJECT_HANDLER_GROUP_RO (dot1dStpHelloTime,               ASN_INTEGER,   snmp_get_dot1d_stp, SNMP_STP_HELLO_TIME,            VAL_INTLEN, VAL_INTLEN);
-OBJECT_HANDLER_GROUP_RO (dot1dStpHoldTime,                ASN_INTEGER,   snmp_get_dot1d_stp, SNMP_STP_HOLD_TIME,             VAL_INTLEN, VAL_INTLEN);
-OBJECT_HANDLER_GROUP_RO (dot1dStpForwardDelay,            ASN_INTEGER,   snmp_get_dot1d_stp, SNMP_STP_FORWARD_DELAY,         VAL_INTLEN, VAL_INTLEN);
-OBJECT_HANDLER_GROUP_RW (dot1dStpBridgeMaxAge,            ASN_INTEGER,   snmp_get_dot1d_stp, SNMP_STP_BRIDGE_MAX_AGE,        VAL_INTLEN, VAL_INTLEN, snmp_set_dot1d_stp, snmp_commit);
-OBJECT_HANDLER_GROUP_RW (dot1dStpBridgeHelloTime,         ASN_INTEGER,   snmp_get_dot1d_stp, SNMP_STP_BRIDGE_HELLO_TIME,     VAL_INTLEN, VAL_INTLEN, snmp_set_dot1d_stp, snmp_commit);
-OBJECT_HANDLER_GROUP_RW (dot1dStpBridgeForwardDelay,      ASN_INTEGER,   snmp_get_dot1d_stp, SNMP_STP_BRIDGE_FORWARD_DELAY,  VAL_INTLEN, VAL_INTLEN, snmp_set_dot1d_stp, snmp_commit);
-OBJECT_HANDLER_CONST    (dot1dStpVersion,                 ASN_INTEGER,   2);   /* XXX: FIXME! Forced version to RSTP */
-OBJECT_HANDLER_GROUP_RO (dot1dStpTxHoldCount,             ASN_INTEGER,   snmp_get_dot1d_stp, SNMP_STP_TX_HOLD_COUNT,         VAL_INTLEN, VAL_INTLEN);
+nsh_scalar_handler_const    (dot1dStpProtocolSpecification,   ASN_INTEGER,   3);   /* XXX: FIXME! Protocol specification is always 802.1d */
+nsh_scalar_group_handler_ro (dot1dStpPriority,                ASN_INTEGER,   SNMP_STP_PRIORITY,              snmp_get_dot1d_stp, sizeof(long), 0);   /* XXX: FIXME! RW support, see snmp_set_stp_prio */
+nsh_scalar_group_handler_ro (dot1dStpTimeSinceTopologyChange, ASN_TIMETICKS, SNMP_STP_TIME_SINCE_TOP_CHANGE, snmp_get_dot1d_stp, sizeof(long), 0);
+nsh_scalar_group_handler_ro (dot1dStpTopChanges,              ASN_COUNTER,   SNMP_STP_TOP_CHANGES,           snmp_get_dot1d_stp, sizeof(long), 0);
+nsh_scalar_group_handler_ro (dot1dStpDesignatedRoot,          ASN_OCTET_STR, SNMP_STP_DESIGNATED_ROOT,       snmp_get_dot1d_stp, 8,            0);
+nsh_scalar_group_handler_ro (dot1dStpRootCost,                ASN_INTEGER,   SNMP_STP_ROOT_COST,             snmp_get_dot1d_stp, sizeof(long), 0);
+nsh_scalar_group_handler_ro (dot1dStpRootPort,                ASN_INTEGER,   SNMP_STP_ROOT_PORT,             snmp_get_dot1d_stp, sizeof(long), 0);
+nsh_scalar_group_handler_ro (dot1dStpMaxAge,                  ASN_INTEGER,   SNMP_STP_MAX_AGE,               snmp_get_dot1d_stp, sizeof(long), 0);
+nsh_scalar_group_handler_ro (dot1dStpHelloTime,               ASN_INTEGER,   SNMP_STP_HELLO_TIME,            snmp_get_dot1d_stp, sizeof(long), 0);
+nsh_scalar_group_handler_ro (dot1dStpHoldTime,                ASN_INTEGER,   SNMP_STP_HOLD_TIME,             snmp_get_dot1d_stp, sizeof(long), 0);
+nsh_scalar_group_handler_ro (dot1dStpForwardDelay,            ASN_INTEGER,   SNMP_STP_FORWARD_DELAY,         snmp_get_dot1d_stp, sizeof(long), 0);
+nsh_scalar_group_handler_ro (dot1dStpBridgeMaxAge,            ASN_INTEGER,   SNMP_STP_BRIDGE_MAX_AGE,        snmp_get_dot1d_stp, sizeof(long), 0);   /* XXX: FIXME! RW support, see snmp_set_max_age */
+nsh_scalar_group_handler_ro (dot1dStpBridgeHelloTime,         ASN_INTEGER,   SNMP_STP_BRIDGE_HELLO_TIME,     snmp_get_dot1d_stp, sizeof(long), 0);   /* XXX: FIXME! RW support, see snmp_set_hello_time */
+nsh_scalar_group_handler_ro (dot1dStpBridgeForwardDelay,      ASN_INTEGER,   SNMP_STP_BRIDGE_FORWARD_DELAY,  snmp_get_dot1d_stp, sizeof(long), 0);   /* XXX: FIXME! RW support, see snmp_set_forward_delay */
+nsh_scalar_handler_const    (dot1dStpVersion,                 ASN_INTEGER,   2);   /* XXX: FIXME! Forced version to RSTP */
+nsh_scalar_group_handler_ro (dot1dStpTxHoldCount,             ASN_INTEGER,   SNMP_STP_TX_HOLD_COUNT,         snmp_get_dot1d_stp, sizeof(long), 0);
 
 void snmp_init_mib_dot1d_stp(void)
 {
-    REGISTER_HANDLER_RO (dot1dStpProtocolSpecification);
-    REGISTER_HANDLER_RW (dot1dStpPriority);
-    REGISTER_HANDLER_RO (dot1dStpTimeSinceTopologyChange);
-    REGISTER_HANDLER_RO (dot1dStpTopChanges);
-    REGISTER_HANDLER_RO (dot1dStpDesignatedRoot);
-    REGISTER_HANDLER_RO (dot1dStpRootCost);
-    REGISTER_HANDLER_RO (dot1dStpRootPort);
-    REGISTER_HANDLER_RO (dot1dStpMaxAge);
-    REGISTER_HANDLER_RO (dot1dStpHelloTime);
-    REGISTER_HANDLER_RO (dot1dStpHoldTime);
-    REGISTER_HANDLER_RO (dot1dStpForwardDelay);
-    REGISTER_HANDLER_RW (dot1dStpBridgeMaxAge);
-    REGISTER_HANDLER_RW (dot1dStpBridgeHelloTime);
-    REGISTER_HANDLER_RW (dot1dStpBridgeForwardDelay);
-    REGISTER_HANDLER_RW (dot1dStpVersion);
-    REGISTER_HANDLER_RW (dot1dStpTxHoldCount);
+    nsh_register_scalar_ro(dot1dStpProtocolSpecification);
+    nsh_register_scalar_ro(dot1dStpPriority);
+    nsh_register_scalar_ro(dot1dStpTimeSinceTopologyChange);
+    nsh_register_scalar_ro(dot1dStpTopChanges);
+    nsh_register_scalar_ro(dot1dStpDesignatedRoot);
+    nsh_register_scalar_ro(dot1dStpRootCost);
+    nsh_register_scalar_ro(dot1dStpRootPort);
+    nsh_register_scalar_ro(dot1dStpMaxAge);
+    nsh_register_scalar_ro(dot1dStpHelloTime);
+    nsh_register_scalar_ro(dot1dStpHoldTime);
+    nsh_register_scalar_ro(dot1dStpForwardDelay);
+    nsh_register_scalar_ro(dot1dStpBridgeMaxAge);
+    nsh_register_scalar_ro(dot1dStpBridgeHelloTime);
+    nsh_register_scalar_ro(dot1dStpBridgeForwardDelay);
+    nsh_register_scalar_ro(dot1dStpVersion);
+    nsh_register_scalar_ro(dot1dStpTxHoldCount);
 }
 
 #endif
