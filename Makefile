@@ -1,4 +1,4 @@
-MODE = devel
+#MODE = devel
 version := g6dba9b1
 
 DSOURCES = main.c epoll_loop.c brmon.c bridge_track.c libnetlink.c mstp.c \
@@ -12,7 +12,7 @@ CTLSOURCES = ctl_main.c ctl_socket_client.c
 
 CTLOBJECTS = $(CTLSOURCES:.c=.o)
 
-CFLAGS += -Os -Wall -Werror -D_REENTRANT -D__LINUX__ -DVERSION=$(version) -I. \
+CFLAGS += -Wall -Werror -D_REENTRANT -D__LINUX__ -DVERSION=$(version) -I. \
           -D_GNU_SOURCE -D__LIBC_HAS_VERSIONSORT__ -DHAVE_SNMP
 
 LIBDIR    = $(STAGING)/lib
