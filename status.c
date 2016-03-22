@@ -431,7 +431,7 @@ int mstp_write_status_file(int display)
     snprintf(temp, sizeof(temp), "running as PID %d", on);
 
     fprintf(fd, "STP Enabled               : %s%s\n", on ? "Yes, " : "No", on ? temp : "");
-    fprintf(fd, "Force Version             : RSTP\n");
+    fprintf(fd, "Force Version             : RSTP\n\n");
    
     sys_ether_ntoa(s.bridge_id.s.mac_address, temp, sizeof(temp));
     fprintf(fd, "Bridge ID MAC Address     : %s\n", temp);
@@ -439,16 +439,16 @@ int mstp_write_status_file(int display)
 	    __be16_to_cpu(s.bridge_id.s.priority) >> 12, __be16_to_cpu(s.bridge_id.s.priority));
     fprintf(fd, "Bridge Max Age            : %-3d          Bridge Hello Time : %u\n",
 	    s.bridge_max_age, s.bridge_hello_time);
-    fprintf(fd, "Bridge Forward Delay      : %-3d          Tx Hold Count     : %u\n",
+    fprintf(fd, "Bridge Forward Delay      : %-3d          Tx Hold Count     : %u\n\n",
 	    s.bridge_forward_delay, s.tx_hold_count);
     fprintf(fd, "Topology Change Count     : %u\n", s.topology_change_count);
-    fprintf(fd, "Time Since Last Change    : %u\n", s.time_since_topology_change);
+    fprintf(fd, "Time Since Last Change    : %u\n\n", s.time_since_topology_change);
     sys_ether_ntoa(s.designated_root.s.mac_address, temp, sizeof(temp));
     fprintf(fd, "Designated Root           : %s\n", temp);
     fprintf(fd, "Designated Root Path Cost : %u\n", s.root_path_cost);
     fprintf(fd, "Designated Root Port      : %s\n",
 	    s.root_path_cost ? root_port_name : "This switch is root");
-    fprintf(fd, "Designated Root Priority  : %d\n", __be16_to_cpu(s.designated_root.s.priority));
+    fprintf(fd, "Designated Root Priority  : %d\n\n", __be16_to_cpu(s.designated_root.s.priority));
 
 
     fprintf(fd, "Port     Type         Cost        Priority  State      Edge   Designated Bridge\n");
@@ -462,13 +462,14 @@ int mstp_write_status_file(int display)
     {
 	CIST_PortStatus ps;
 	int port_index = 0;
-	char *port_p, port_id[50], path_cost[50];
-	int ena;
+	char *port_p, port_id[50], path_cost[50], port_name[30];
+	int ena, id;
 
 	cfg_t * cfg_port = cfg_getnsec(parse_cfg2, "ports", i);
 
 	port_p = cfg_getstr(cfg_port, "ifname");
-
+	sscanf (port_p, "eth%d", &id);
+	sprintf(port_name, "Eth %d", id);
 	port_index = if_nametoindex(port_p);
 
 	if((ena = port_is_enabled(port_p)))
@@ -486,7 +487,7 @@ int mstp_write_status_file(int display)
 	}
 
 	fprintf(fd, "%-7s  %-11.11s  %-9s   %-8s  %-10s %-5s  %s\n",
-		port_p,
+		port_name,
 		port_typestr(port_p),
 		ena ? path_cost : "N/A",
 		ena ? port_id : "N/A",
