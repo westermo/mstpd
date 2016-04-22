@@ -43,6 +43,8 @@ void snmp_init(void)
 {
     netsnmp_enable_subagent();
     snmp_disable_log();
+    netsnmp_ds_set_boolean(NETSNMP_DS_APPLICATION_ID,
+        NETSNMP_DS_AGENT_NO_CONNECTION_WARNINGS, TRUE);
     snmp_enable_stderrlog();
     init_agent("mstpdAgent");
     snmp_init_mibs();
